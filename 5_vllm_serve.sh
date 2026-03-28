@@ -1,0 +1,1 @@
+python -m vllm.entrypoints.openai.api_server --model outputs/qwen_full --port 8000 --gpu-memory-utilization 0.8
