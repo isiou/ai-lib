@@ -6,15 +6,18 @@ from sentence_transformers import CrossEncoder
 def main():
     # 对话模型
     model_dir = snapshot_download("Qwen/Qwen3-0.6B")
-    # print(model_dir)
+    if model_dir:
+        print(model_dir)
 
     # 向量化模型
     emb_model = SentenceTransformer("BAAI/bge-small-zh-v1.5")
-    # print(emb_model)
+    if emb_model:
+        print(emb_model)
 
     # 重排序模型
     reranker_model = CrossEncoder("BAAI/bge-reranker-base")
-    # print(reranker_model)
+    if reranker_model:
+        print(reranker_model)
 
     print("模型下载完成")
 

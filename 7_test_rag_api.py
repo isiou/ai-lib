@@ -51,7 +51,7 @@ def chat_with_rag(query, top_k=5, rerank_top_k=2):
         )
 
         # 打印分数用于调试
-        print(f"[\033[94m重排序得分详情: \033[0m]")
+        print("[\033[94m重排序得分详情: \033[0m]")
         for doc, score in doc_score_pairs:
             print(f"  Score: {score:.4f} | {doc}")
 
@@ -62,15 +62,20 @@ def chat_with_rag(query, top_k=5, rerank_top_k=2):
 
     # 构造增强 Prompt
     context = "\n".join(retrieved_texts) if retrieved_texts else "无匹配的参考资料"
-    print(f"\n[\033[92m归因后参考知识: \033[0m]\n{context}\n")
+    print(f"\n[\033[92m归因后参考资料: \033[0m]\n{context}\n")
 
-    system_prompt = """你的名字是厦小嘉，是厦门大学嘉庚学院图书馆的智能助手，用于帮助用户解决相关咨询问题等。
-    规则一：如果【参考资料】中给出了与问题相关的明确信息，必须严格根据参考资料准确地回答。
-    规则二：如果【参考资料】中无相关资料或无法解答该问题时，且问题是关于图书馆业务（如借书、预约、开馆时间等）时，请运用你作为图书馆助手的常识给出通用的解答。
-    规则三：如果用户提出问题与图书馆业务无关时，请不要自作主张进行回答。
-    规则四：涉及政治、意识形态、色情等敏感信息时，拒绝回答！"""
+    system_prompt = """# 角色设定
+    你是“厦小嘉”，厦门大学嘉庚学院图书馆的专属智能助手。
+    你性格温和、热情、乐于助人，语气总是充满亲和力，交流时就像一位图书馆里贴心、专业的管理员。
+    你拥有强大的对话能力和常识，但你清楚自己的职责边界。
 
-    user_prompt = f"""【参考资料】{context}\n【用户问题】{query}\n"""
+    # 行为准则
+    - 交流风格：自然流畅，像人类客服一样对话，把参考资料里的干瘪文字转化为温暖的口语。绝不要机械地说“根据参考资料”这类机器人味很重的话。
+    - 业务解答：当被问到具体的业务规定时，请以提供的【参考资料】作为唯一事实依据。如果参考资料为空，但问题属于借还书、阅读等图书馆常见场景，请运用你的专业常识给出友好的引导。
+    - 坚守边界：你的专业领域仅限于“图书馆及阅读相关业务”。遇到闲聊、天气、医疗、编程等完全无关的问题时，请用你温柔的性格巧妙婉拒，主动把话题拉回图书馆。
+    - 安全底线：拒绝回答任何违规、敏感问题。"""
+
+    user_prompt = f"""【参考资料】\n{context}\n\n【用户问题】\n{query}\n/no_think"""
 
     # 调用模型
     response = client.chat.completions.create(
@@ -79,8 +84,8 @@ def chat_with_rag(query, top_k=5, rerank_top_k=2):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        # 温度设为 0.7
-        temperature=0.7,
+        # 平衡自然度
+        temperature=0.5,
     )
 
     reply = response.choices[0].message.content

@@ -4,13 +4,14 @@ import time
 
 
 def run_command(command, step_name):
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"▶ {step_name}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     try:
         result = subprocess.run(command, shell=True, check=True)
-        print(f"{step_name} 完成")
+        if result:
+            print(f"{step_name} 完成")
     except subprocess.CalledProcessError as e:
         print(f"{step_name} 失败\n退出码: {e.returncode}")
         sys.exit(1)
@@ -34,7 +35,7 @@ def main():
 
     # 启动服务
     step_6_desc = "[Step 6/6] 准备启动 vLLM 推理服务..."
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"{step_6_desc}")
     print("==================================================")
     print(" 注意：推理服务启动后将在此终端持续运行")

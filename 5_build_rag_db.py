@@ -9,7 +9,7 @@ from sentence_transformers import SentenceTransformer
 def parse_knowledge_base(kb_dir):
     chunks = []
     if not os.path.exists(kb_dir):
-        print(f"未识别到知识库目录")
+        print("未识别到知识库目录")
         return chunks
 
     for filename in os.listdir(kb_dir):
