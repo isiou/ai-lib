@@ -2,24 +2,21 @@ from modelscope import snapshot_download
 from sentence_transformers import SentenceTransformer
 from sentence_transformers import CrossEncoder
 
+# 采用的模型配置
+BASE_MODEL = "Qwen/Qwen3-0.6B"
+EMB_MODEL = "BAAI/bge-small-zh-v1.5"
+REK_MODEL = "BAAI/bge-reranker-base"
+
 
 def main():
-    # 对话模型
-    model_dir = snapshot_download("Qwen/Qwen3-0.6B")
-    if model_dir:
-        print(model_dir)
+    base_res = snapshot_download(BASE_MODEL)
 
-    # 向量化模型
-    emb_model = SentenceTransformer("BAAI/bge-small-zh-v1.5")
-    if emb_model:
-        print(emb_model)
+    emb_res = SentenceTransformer(EMB_MODEL)
 
-    # 重排序模型
-    reranker_model = CrossEncoder("BAAI/bge-reranker-base")
-    if reranker_model:
-        print(reranker_model)
+    rek_res = CrossEncoder(REK_MODEL)
 
-    print("模型下载完成")
+    if base_res and emb_res and rek_res:
+        print("模型下载完成")
 
 
 if __name__ == "__main__":

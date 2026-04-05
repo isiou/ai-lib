@@ -1,36 +1,23 @@
 import sqlite3
 import os
 import logging
+from backend.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = "data/library.db"
 
-
+# 启动时初始化建表并视情况注入测试用的基础书目数据
 def init_db():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    os.makedirs(os.path.dirname(settings.DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(settings.DB_PATH)
     cursor = conn.cursor()
-
-    # Create books table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS books (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            author TEXT NOT NULL,
-            topic TEXT NOT NULL,
-            call_number TEXT NOT NULL,
-            location TEXT NOT NULL,
-            status TEXT NOT NULL
-        )
-    """)
-
-    # Check if data exists
+    cursor.execute(
+        "\n        CREATE TABLE IF NOT EXISTS books (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            title TEXT NOT NULL,\n            author TEXT NOT NULL,\n            topic TEXT NOT NULL,\n            call_number TEXT NOT NULL,\n            location TEXT NOT NULL,\n            status TEXT NOT NULL\n        )\n    "
+    )
     cursor.execute("SELECT COUNT(*) FROM books")
     if cursor.fetchone()[0] == 0:
         logger.info("Initializing test data for library...")
         test_data = [
-            # 计算机与人工智能
             (
                 "深度学习 (Deep Learning)",
                 "Ian Goodfellow",
@@ -79,7 +66,6 @@ def init_db():
                 "三楼计算机阅览室",
                 "已借出",
             ),
-            # 历史
             ("历史的教训", "Will Durant", "历史", "K0/1", "四楼社科阅览室", "在馆可借"),
             (
                 "人类简史：从动物到上帝",
@@ -105,7 +91,6 @@ def init_db():
                 "四楼社科阅览室",
                 "已借出",
             ),
-            # 文学与小说
             (
                 "百年孤独",
                 "Gabriel García Márquez",
@@ -133,7 +118,6 @@ def init_db():
                 "在馆可借",
             ),
             ("活着", "余华", "当代文学", "I247.5/23", "五楼文学阅览室", "在馆可借"),
-            # 经济与管理
             (
                 "经济学原理",
                 "N. Gregory Mankiw",
@@ -166,7 +150,6 @@ def init_db():
                 "四楼社科阅览室",
                 "在馆可借",
             ),
-            # 科学与科普
             (
                 "时间简史",
                 "Stephen Hawking",
@@ -184,7 +167,6 @@ def init_db():
                 "在馆可借",
             ),
             ("宇宙", "Carl Sagan", "天文学", "P1/18", "二楼自然科学阅览室", "已借出"),
-            # 艺术与哲学
             (
                 "艺术的故事",
                 "E. H. Gombrich",
@@ -218,7 +200,8 @@ def init_db():
     conn.close()
 
 
+# 暴露获取可列名访问的数据库连接对象
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(settings.DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn

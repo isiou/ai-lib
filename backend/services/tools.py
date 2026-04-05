@@ -2,29 +2,30 @@ import datetime
 import json
 import re
 import uuid
+import logging
 from typing import Any
 from backend.core.db import get_db_connection
 
+logger = logging.getLogger(__name__)
 
-# ================= 1. 定义本地功能函数 =================
+
+# 获取当前精确时间
 def get_current_time():
-    """获取当前的时间，返回格式为 HH:MM:SS"""
     now = datetime.datetime.now()
     return {"current_time": now.strftime("%H:%M:%S")}
 
 
+# 获取当前具体日期
 def get_current_date():
-    """获取当前的日期，返回格式为 YYYY-MM-DD"""
     today = datetime.date.today()
     return {"current_date": today.strftime("%Y-%m-%d")}
 
 
+# 依据用户话题通过数据库检索推荐书籍
 def recommend_books(topic):
-    """根据用户感兴趣的主题推荐相关书籍"""
-    print(f"\n[SQLite DB] 正在查询与 '{topic}' 相关的推荐书籍...")
+    logger.info(f"[SQLite DB] 正在查询与 '{topic}' 相关的推荐书籍...")
     conn = get_db_connection()
     cursor = conn.cursor()
-    # 扩大搜索范围，使得不仅搜索主题，也搜索书名和作者
     search_term = f"%{topic}%"
     cursor.execute(
         "SELECT title, author FROM books WHERE topic LIKE ? OR title LIKE ? OR author LIKE ?",
@@ -36,22 +37,17 @@ def recommend_books(topic):
     recommended_books = [
         {"title": row["title"], "author": row["author"]} for row in rows
     ]
-
     if not recommended_books:
         return {
             "topic": topic,
-            "error": f"抱歉，没有找到与 '{topic}' 相关的书籍。请尝试其他关键词。",
+            "error": f"抱歉 未找到与 '{topic}' 相关的书籍 请尝试其他关键词",
         }
-
-    return {
-        "topic": topic,
-        "recommended_books": recommended_books,
-    }
+    return {"topic": topic, "recommended_books": recommended_books}
 
 
+# 根据书名精确查询图书馆馆藏相关状态
 def query_book_info(book_name):
-    """查询指定书籍的馆藏信息（索书号、位置、借阅状态）"""
-    print(f"\n[SQLite DB] 正在查询书籍 '{book_name}' 的馆藏状态...")
+    logger.info(f"[SQLite DB] 正在查询书籍 '{book_name}' 的馆藏状态...")
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -79,6 +75,7 @@ AVAILABLE_FUNCTIONS = {
     "query_book_info": query_book_info,
 }
 
+# 注册给 LLM 使用的工具规范描述列表
 TOOLS = [
     {
         "type": "function",
@@ -106,7 +103,7 @@ TOOLS = [
                 "properties": {
                     "topic": {
                         "type": "string",
-                        "description": "用户感兴趣的主题，例如：人工智能、历史、Python等",
+                        "description": "用户感兴趣的主题 例如人工智能 历史 Python等",
                     }
                 },
                 "required": ["topic"],
@@ -117,7 +114,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "query_book_info",
-            "description": "查询指定书籍的馆藏信息（索书号、位置、借阅状态）",
+            "description": "查询指定书籍的馆藏信息 包含索书号 位置 借阅状态等",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -130,20 +127,17 @@ TOOLS = [
 ]
 
 
-# ================= 2. 辅助解析与清理函数 =================
+# 清理模型回复中携带的多余思考过程标签
 def clean_output(text: str) -> str:
-    """清理输出中可能带有的大模型思考过程 <think>"""
     if text:
-        # 清除完整的 <think>...</think>
-        text = re.sub(r"<think>.*?</think>\n*", "", text, flags=re.DOTALL)
-        # 如果还有未闭合的 <think>，去掉标签保留内容，以免输出空白
+        text = re.sub("<think>.*?</think>\\n*", "", text, flags=re.DOTALL)
         text = text.replace("<think>", "").replace("</think>", "")
         return text.strip()
     return ""
 
 
+# 自研兜底解析器 用于捕捉模型未遵循标准 API 而输出的文本型工具请求
 def parse_manual_tool_calls(content: str):
-    """手动从文本中解析可能的 XML 格式 tool_call 或纯 JSON 格式"""
     tool_calls: list[Any] = []
     if not content:
         return tool_calls
@@ -163,10 +157,9 @@ def parse_manual_tool_calls(content: str):
             self.type = "function"
             self.function = function
 
-    # 1. 尝试匹配 <tool_call> ... </tool_call>
-    pattern = r"<tool_call>\s*({.*?})\s*</tool_call>"
+    # 优先尝试匹配内置的自定义 XML 工具块
+    pattern = "<tool_call>\\s*({.*?})\\s*</tool_call>"
     matches = re.findall(pattern, content, flags=re.DOTALL)
-
     if matches:
         for match in matches:
             try:
@@ -181,12 +174,10 @@ def parse_manual_tool_calls(content: str):
         if tool_calls:
             return tool_calls
 
-    # 2. 尝试解析纯 JSON 文本（先清理掉 <think> 标签）
+    # 若匹配不到则清理思考文本后进一步搜寻代码块
     content_clean = clean_output(content)
-
-    # 尝试寻找 ```json ... ``` 代码块
     json_blocks = re.findall(
-        r"```(?:json)?\s*(\{.*?\})\s*```", content_clean, flags=re.DOTALL
+        "```(?:json)?\\s*(\\{.*?\\})\\s*```", content_clean, flags=re.DOTALL
     )
     if json_blocks:
         for block in json_blocks:
@@ -203,10 +194,10 @@ def parse_manual_tool_calls(content: str):
         if tool_calls:
             return tool_calls
 
-    # 3. 尝试直接从文本中提取 {...}
+    # 最后一招直接截取文本中的疑似 JSON 对象
     start = content_clean.find("{")
     end = content_clean.rfind("}")
-    if start != -1 and end != -1 and end > start:
+    if start != -1 and end != -1 and (end > start):
         possible_json = content_clean[start : end + 1]
         try:
             tool_data = json.loads(possible_json)
