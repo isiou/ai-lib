@@ -4,7 +4,6 @@ import faiss
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from openai import OpenAI
 import re
-import os
 
 
 # 加载向量模型和重排模型
@@ -66,7 +65,7 @@ def chat_with_rag(query, top_k=5, rerank_top_k=2):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        max_tokens=1024,
+        max_tokens=2048,
         temperature=0.7,
     )
 
@@ -87,10 +86,13 @@ if __name__ == "__main__":
         "怎么样借书？",
         "图书馆什么时候开门？",
         "怎么样预约研讨室？",
+        "图书馆可以喝饮料吗？",
+        "简单给我说一下图书馆有哪些规章制度。",
+        "预约书找不到怎么办",
+        "什么我的书籍超期了，没有收到邮件？",
     ]
     for q in queries:
         print(f"用户输入: \n{q}")
         print()
         chat_with_rag(q)
-        terminal_width = os.get_terminal_size().columns
-        print("=" * terminal_width)
+        print("=" * 100)

@@ -9,6 +9,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+# ── 核心对话路由 ──────────────────────────────────────────────────────────────
+
+
 # 核心对话接口 接收用户提问并返回 RAG 强化后的流式响应
 @router.post("/chat")
 async def chat_endpoint(req: ChatRequest):
@@ -19,6 +22,9 @@ async def chat_endpoint(req: ChatRequest):
     except Exception as e:
         logger.error(f"Error in chat endpoint: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── 知识录入路由 ──────────────────────────────────────────────────────────────
 
 
 # 知识录入接口 动态接受新的片段并编码持久化到向量库中

@@ -12,6 +12,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+# ── 生命周期管理 ──────────────────────────────────────────────────────────────
+
+
 # 定义应用生命周期管理器 负责挂载和卸载全局资源
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,6 +33,9 @@ async def lifespan(app: FastAPI):
 
     yield
     logger.info("Shutting down application...")
+
+
+# ── 应用装配 ──────────────────────────────────────────────────────────────────
 
 
 # 工厂函数 创建并装配 FastAPI 主应用实例

@@ -11,6 +11,9 @@ from backend.core.config import settings
 logger = logging.getLogger(__name__)
 
 
+# ── 全局状态管理 ──────────────────────────────────────────────────────────────
+
+
 # 承载后端生命周期内全局依赖对象的核心状态类
 class AppState:
     def __init__(self):
@@ -50,6 +53,8 @@ class AppState:
         with open(settings.USER_KNOWLEDGE_PATH, "a", encoding="utf-8") as f:
             f.write(text + "\n\n")
 
+
+# ── 单例注入 ──────────────────────────────────────────────────────────────────
 
 # 提供全局唯一的共享单例
 app_state = AppState()

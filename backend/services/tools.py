@@ -9,6 +9,9 @@ from backend.core.db import get_db_connection
 logger = logging.getLogger(__name__)
 
 
+# ── 工具实现函数 ──────────────────────────────────────────────────────────────
+
+
 # 获取当前精确时间
 def get_current_time():
     now = datetime.datetime.now()
@@ -75,6 +78,9 @@ AVAILABLE_FUNCTIONS = {
     "query_book_info": query_book_info,
 }
 
+
+# ── 工具定义清单 ──────────────────────────────────────────────────────────────
+
 # 注册给 LLM 使用的工具规范描述列表
 TOOLS = [
     {
@@ -118,13 +124,19 @@ TOOLS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "book_name": {"type": "string", "description": "书籍的名称"}
+                    "book_name": {
+                        "type": "string",
+                        "description": "书籍的名称。注意：必须完全照抄用户提到的字面书名，绝对不要自行添加作者、英文名或任何补充解释！",
+                    }
                 },
                 "required": ["book_name"],
             },
         },
     },
 ]
+
+
+# ── 辅助解析函数 ──────────────────────────────────────────────────────────────
 
 
 # 清理模型回复中携带的多余思考过程标签

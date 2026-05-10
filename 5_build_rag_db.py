@@ -44,18 +44,39 @@ def parse_knowledge_base(kb_dir):
                 elif filename.endswith(".pdf"):
                     try:
                         import fitz
+                        import re
 
                         with fitz.open(filepath) as doc:
+                            full_text = ""
                             for page in doc:
-                                text = page.get_text()
-                                if text:
-                                    chunks.extend(
-                                        [
-                                            line.strip()
-                                            for line in text.split("\n")
-                                            if line.strip()
-                                        ]
-                                    )
+                                full_text += page.get_text() + "\n"
+
+                            lines = full_text.split("\n")
+                            current_chunk = ""
+                            for line in lines:
+                                line = line.strip()
+                                if not line:
+                                    continue
+
+                                is_new_item = re.match(
+                                    r"^(\d+\.|[一二三四五六七八九十]、)", line
+                                )
+                                if is_new_item and current_chunk:
+                                    chunks.append(current_chunk)
+                                    current_chunk = line
+                                elif current_chunk:
+                                    if (
+                                        len(current_chunk) > 400
+                                        and current_chunk[-1] in "。！？.!?"
+                                    ):
+                                        chunks.append(current_chunk)
+                                        current_chunk = line
+                                    else:
+                                        current_chunk += line
+                                else:
+                                    current_chunk = line
+                            if current_chunk:
+                                chunks.append(current_chunk)
                     except ImportError as e:
                         print(e)
                 # .docx

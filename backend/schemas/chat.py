@@ -2,6 +2,9 @@ from pydantic import BaseModel
 from typing import List
 
 
+# ── 数据模型定义 ──────────────────────────────────────────────────────────────
+
+
 # 消息体数据模型定义
 class Message(BaseModel):
     role: str

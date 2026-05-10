@@ -6,6 +6,9 @@ from backend.core.config import settings
 logger = logging.getLogger(__name__)
 
 
+# ── 数据库初始化与种子数据注入 ────────────────────────────────────────────────
+
+
 # 启动时初始化建表并视情况注入测试用的基础书目数据
 def init_db():
     os.makedirs(os.path.dirname(settings.DB_PATH), exist_ok=True)
@@ -198,6 +201,9 @@ def init_db():
         )
         conn.commit()
     conn.close()
+
+
+# ── 数据库连接 ────────────────────────────────────────────────────────────────
 
 
 # 暴露获取可列名访问的数据库连接对象

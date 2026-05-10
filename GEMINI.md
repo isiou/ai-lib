@@ -67,4 +67,12 @@ Run the pipeline sequentially:
 *   **Environment:** Relies on heavily optimized ML environments (PyTorch, Triton, xformers, vLLM).
 *   **Inference:** Uses the OpenAI API compatibility layer provided by `vLLM` for flexible LLM client integrations.
 *   **Static Analysis:** Use `mypy` and `ruff` for strict typing and linting checks. Un-typed third-party libraries (e.g., modelscope, datasets) should be ignored in `mypy` configurations.
-*   **Formatting:** Clean code structure utilizing `if __name__ == "__main__":` blocks for script execution.
+*   **Code Structure & Formatting:**
+    *   Clean code structure utilizing `if __name__ == "__main__":` blocks for script execution.
+    *   Logic should be encapsulated into cohesive functions (e.g., `main()`, `chat_with_rag()`).
+    *   Use explicit `encoding="utf-8"` for all file read/write operations.
+    *   File paths are typically relative to the project root (e.g., `data/rag/...`, `outputs/...`).
+*   **Commenting & Output Style:**
+    *   Use concise Chinese comments to explain code steps (`# 加载分词器`, `# 采用的模型配置`).
+    *   For larger scripts, use stylized section dividers to separate major logic blocks (e.g., `# ── 模型与索引初始化 ──────────────────────────────────────────────────────────`).
+    *   Provide clear terminal output using formatted print statements (e.g., `print(f"**第一次请求**")`, `print("=" * 50)`) to indicate execution progress and trace execution states.
